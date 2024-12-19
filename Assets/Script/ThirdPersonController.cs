@@ -14,7 +14,6 @@ namespace Script
         [SerializeField] private float movementForce = 1f;
         [SerializeField] private float jumpForce = 5f; 
         [SerializeField] private float maxSpeed = 5f;
-        [SerializeField] private float gravity = -9.81f; // Добавляем переменную gravity
         private Vector3 forceDirection = Vector3.zero;
         [SerializeField] private Camera playerCamera;
 
@@ -50,11 +49,11 @@ namespace Script
 
             // Применение гравитации
             if (rb.linearVelocity.y < 0f)
-                rb.linearVelocity += Vector3.down * gravity * Time.fixedDeltaTime;
+                rb.linearVelocity += Vector3.down  * Time.fixedDeltaTime;
 
             // Ограничение максимальной скорости
             Vector3 horizontalVelocity = rb.linearVelocity;
-            horizontalVelocity.y = 0; // Сохраняем только горизонтальную скорость
+            horizontalVelocity.y = 0; 
 
             if (horizontalVelocity.sqrMagnitude > maxSpeed * maxSpeed)
                 rb.linearVelocity = horizontalVelocity.normalized * maxSpeed + Vector3.up * rb.linearVelocity.y;
@@ -82,6 +81,7 @@ namespace Script
             }
         }
 
+
         private void LookAt()
         {
             Vector3 direction = rb.linearVelocity;
@@ -103,7 +103,7 @@ namespace Script
         private Vector3 GetCameraRight(Camera camera)
         {
             Vector3 right = camera.transform.right;
-            right.y = 0; // Игнорируем вертикальную составляющую
+            right.y = 0; 
             return right.normalized;
         }
 
@@ -111,12 +111,11 @@ namespace Script
         {
             if (IsGrounded())
             {
-                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse); // Применяем силу прыжка непосредственно к Rigidbody
-                animator.SetBool("jump", true); // Устанавливаем параметр анимации прыжка
-                animator.SetBool("isGrounded", false); // Устанавливаем параметр "на земле" в false
+                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+                animator.SetBool("jump", true); // Включение анимации прыжка
+                animator.SetBool("isGrounded", false);
             }
         }
-
         public bool IsGrounded()
         {
             Ray ray = new Ray(transform.position + Vector3.up * 0.25f, Vector3.down);
