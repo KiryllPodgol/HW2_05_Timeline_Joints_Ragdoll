@@ -11,15 +11,14 @@ public class DeathTrigger : MonoBehaviour
     private Rigidbody[] ragdollBodies; 
     private Collider[] ragdollColliders; 
     private Collider playerCollider; 
+    private bool isDead = false; // Флаг для отслеживания состояния смерти
 
     private void Start()
     {
-        
         animator = player.GetComponent<Animator>();
         mainRigidbody = player.GetComponent<Rigidbody>();
         playerCollider = player.GetComponent<Collider>();
 
-        
         ragdollBodies = player.GetComponentsInChildren<Rigidbody>();
         ragdollColliders = player.GetComponentsInChildren<Collider>();
 
@@ -29,7 +28,7 @@ public class DeathTrigger : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         // Проверяем, столкнулся ли объект с коллайдером персонажа
-        if (collision.collider == playerCollider)
+        if (!isDead && collision.collider == playerCollider)
         {
             ActivateDeathSequence(); // Активируем процесс смерти
         }
@@ -73,6 +72,10 @@ public class DeathTrigger : MonoBehaviour
 
     private void ActivateDeathSequence()
     {
+        if (isDead) return; // Если персонаж уже мертв, не повторять
+
+        isDead = true; // Помечаем, что персонаж умер
+
         // Отключаем физику главного Rigidbody персонажа
         if (mainRigidbody != null)
         {
