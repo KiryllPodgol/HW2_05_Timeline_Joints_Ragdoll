@@ -20,7 +20,7 @@ namespace Script
         private Vector3 forceDirection = Vector3.zero;
 
         private void Awake()
-        { 
+        {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
             rb = GetComponent<Rigidbody>();
