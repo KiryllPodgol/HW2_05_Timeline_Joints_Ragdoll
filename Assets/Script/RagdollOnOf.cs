@@ -15,64 +15,47 @@ public class RagdollOnOf : MonoBehaviour
     private void Start()
     {
         GetRagdollBits();
-        RagdollModeOff();
+        SwitchRagDollMode(false);
     }
     private void GetRagdollBits()
     {
         RagdollColliders = CharacterRig.GetComponentsInChildren<Collider>();
         limbsRigidbodies = CharacterRig.GetComponentsInChildren<Rigidbody>();
     }
-
     private void OnCollisionEnter(Collision collision)
     {
         if (isInvulnerable) return;
-        if (collision.gameObject.name == "DangerCube")
+
+        if (collision.gameObject.TryGetComponent<DangerousObject>(out DangerousObject dangerous))
         {
-            RagdollModeOn();
+            SwitchRagDollMode(true);
             StartCoroutine(RespawnCoroutine());
         }
     }
-    private void RagdollModeOn()
-    {
-        Debug.Log("RagdollModeOn activated!");
-        CharacterAnimator.enabled = false;
-        foreach (Collider col in RagdollColliders)
-        {
-            col.enabled = true;
-        }
-        foreach (Rigidbody rb in limbsRigidbodies)
-        {
-            rb.isKinematic = false;
-        }
-        mainCollider.enabled = false;
-        GetComponent<Rigidbody>().isKinematic = true;
-    }
-    private void RagdollModeOff()
-    {
-        Debug.Log("RagdollModeOff activated!");
-        foreach (Collider col in RagdollColliders)
-        {
-            col.enabled = false;
-        }
-        foreach (Rigidbody rb in limbsRigidbodies)
-        {
-            rb.isKinematic = true;
-        }
-        CharacterAnimator.enabled = true;
-        mainCollider.enabled = true;
-        GetComponent<Rigidbody>().isKinematic = false;
-    }
+   private void SwitchRagDollMode(bool On)
+   {
+       CharacterAnimator.enabled = !On;
+       foreach (Collider col in RagdollColliders)
+       {
+           col.enabled = On;
+       }
+       foreach (Rigidbody rb in limbsRigidbodies)
+       {
+           rb.isKinematic = !On;
+       }
+       mainCollider.enabled = !On;
+       GetComponent<Rigidbody>().isKinematic = On;
+   }
+   
     private IEnumerator RespawnCoroutine()
     {
-        Debug.Log("Respawn started...");
         yield return new WaitForSeconds(respawnDelay);
-        RagdollModeOff();
+        SwitchRagDollMode(false);
         StartCoroutine(InvulnerabilityCoroutine());
         Debug.Log("Respawn completed!");
     }
     private IEnumerator InvulnerabilityCoroutine()
     {
-        Debug.Log("Invulnerability started!");
         isInvulnerable = true;
         yield return new WaitForSeconds(invulnerabilityTime);
 

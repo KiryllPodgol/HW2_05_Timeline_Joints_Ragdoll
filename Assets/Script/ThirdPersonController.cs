@@ -11,11 +11,13 @@ namespace Script
         private InputAction move;
         private Rigidbody rb;
         private Animator animator;
+
         [SerializeField] private float movementForce = 1f;
         [SerializeField] private float jumpForce = 5f; 
         [SerializeField] private float maxSpeed = 5f;
-        private Vector3 forceDirection = Vector3.zero;
         [SerializeField] private Camera playerCamera;
+
+        private Vector3 forceDirection = Vector3.zero;
 
         private void Awake()
         {
@@ -39,17 +41,19 @@ namespace Script
 
         private void FixedUpdate()
         {
+            // Сбрасываем вектор силы перед каждым обновлением
+            forceDirection = Vector3.zero;
+
             // Управление движением
             forceDirection += move.ReadValue<Vector2>().x * GetCameraRight(playerCamera) * movementForce;
             forceDirection += move.ReadValue<Vector2>().y * GetCameraForward(playerCamera) * movementForce;
 
             // Применение силы к Rigidbody
             rb.AddForce(forceDirection, ForceMode.Impulse);
-            forceDirection = Vector3.zero;
 
             // Применение гравитации
             if (rb.linearVelocity.y < 0f)
-                rb.linearVelocity += Vector3.down  * Time.fixedDeltaTime;
+                rb.linearVelocity += Vector3.down * Time.fixedDeltaTime;
 
             // Ограничение максимальной скорости
             Vector3 horizontalVelocity = rb.linearVelocity;
@@ -63,6 +67,17 @@ namespace Script
 
             // Поворот персонажа в направлении движения
             LookAt();
+        }
+
+        private void LateUpdate()
+        {
+            // Обновление позиции камеры
+            if (playerCamera != null)
+            {
+                Vector3 targetPosition = transform.position + Vector3.up * 2f; // Отдаляем камеру на высоту
+                playerCamera.transform.position = Vector3.Lerp(playerCamera.transform.position, targetPosition, Time.deltaTime * 5f);
+                playerCamera.transform.LookAt(transform.position + Vector3.up); // Смотрим на персонажа
+            }
         }
 
         private void UpdateAnimation()
@@ -81,22 +96,22 @@ namespace Script
             }
         }
 
-
         private void LookAt()
         {
             Vector3 direction = rb.linearVelocity;
-            direction.y = 0f; // Игнорируем вертикальную составляющую
+            direction.y = 0f;
 
-            if (move.ReadValue<Vector2>().sqrMagnitude > 0.1f && direction.sqrMagnitude > 0.1f)
-                rb.rotation = Quaternion.LookRotation(direction, Vector3.up);
-            else
-                rb.angularVelocity = Vector3.zero; // Отключаем вращение, если персонаж не движется
+            if (direction.sqrMagnitude > 0.1f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(direction);
+                rb.rotation = Quaternion.Slerp(rb.rotation, targetRotation, Time.deltaTime * 10f); 
+            }
         }
 
         private Vector3 GetCameraForward(Camera camera)
         {
             Vector3 forward = camera.transform.forward;
-            forward.y = 0; // Игнорируем вертикальную составляющую
+            forward.y = 0;
             return forward.normalized;
         }
 
@@ -112,10 +127,11 @@ namespace Script
             if (IsGrounded())
             {
                 rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-                animator.SetBool("jump", true); // Включение анимации прыжка
+                animator.SetBool("jump", true);
                 animator.SetBool("isGrounded", false);
             }
         }
+
         public bool IsGrounded()
         {
             Ray ray = new Ray(transform.position + Vector3.up * 0.25f, Vector3.down);
@@ -123,3 +139,4 @@ namespace Script
         }
     }
 }
+
