@@ -21,6 +21,8 @@ namespace Script
 
         private void Awake()
         {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
             rb = GetComponent<Rigidbody>();
             animator = GetComponent<Animator>();
             playerActionsAsset = new ThirdPersonActionsAsset();
@@ -41,33 +43,26 @@ namespace Script
 
         private void FixedUpdate()
         {
-            // Сбрасываем вектор силы перед каждым обновлением
-            forceDirection = Vector3.zero;
+            Vector2 input = move.ReadValue<Vector2>();
+            if (input.sqrMagnitude > 0.1f)
+            {
+                forceDirection = input.x * GetCameraRight(playerCamera) * movementForce;
+                forceDirection += input.y * GetCameraForward(playerCamera) * movementForce;
 
-            // Управление движением
-            forceDirection += move.ReadValue<Vector2>().x * GetCameraRight(playerCamera) * movementForce;
-            forceDirection += move.ReadValue<Vector2>().y * GetCameraForward(playerCamera) * movementForce;
-
-            // Применение силы к Rigidbody
-            rb.AddForce(forceDirection, ForceMode.Impulse);
-
-            // Применение гравитации
-            if (rb.linearVelocity.y < 0f)
-                rb.linearVelocity += Vector3.down * Time.fixedDeltaTime;
+                rb.AddForce(forceDirection, ForceMode.Impulse);
+            }
 
             // Ограничение максимальной скорости
             Vector3 horizontalVelocity = rb.linearVelocity;
-            horizontalVelocity.y = 0; 
+            horizontalVelocity.y = 0;
 
             if (horizontalVelocity.sqrMagnitude > maxSpeed * maxSpeed)
                 rb.linearVelocity = horizontalVelocity.normalized * maxSpeed + Vector3.up * rb.linearVelocity.y;
 
-            // Обновление анимации
             UpdateAnimation();
-
-            // Поворот персонажа в направлении движения
             LookAt();
         }
+
 
         private void LateUpdate()
         {
